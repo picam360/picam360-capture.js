@@ -1,0 +1,14 @@
+{
+ "name": "picam360-capture.js",
+ "version": "0.0.1",
+ "private": true,
+ "dependencies": {
+  "async": "*",
+  "moment": "*",
+  "sprintf-js": "*",
+  "uuid": "*",
+  "xmlhttprequest": "^1.8.0",
+  "eventemitter3" : "*",
+  "uuid-parse" : "*"
+ }
+}
