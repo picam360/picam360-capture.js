@@ -40,7 +40,7 @@ function PacketHeader(pack) {
 function build_packet(data, pt) {
 	var raw_header_len = 8;
 	var header_len = 12;
-	var pack = new Buffer(raw_header_len + header_len + data.length);
+	var pack = Buffer.alloc(raw_header_len + header_len + data.length);
 	pack[0] = 0xFF;
 	pack[1] = 0xE1;
 	pack[2] = (pack.length >> 8) & 0xFF;//network(big) endian
@@ -75,7 +75,7 @@ function add_connection(ws) {
 	ws.on("data", function(buff) {
 		if (callback) {
 			if (buff.constructor.name != "Buffer") {
-				buff = new Buffer(buff);
+				buff = Buffer.from(buff);
 			}
 			callback(PacketHeader(buff), ws);
 		}

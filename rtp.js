@@ -45,7 +45,7 @@ function PacketHeader(pack) {
 
 function build_packet(data, pt) {
 	var header_len = 12;
-	var pack = new Buffer(header_len + data.length);
+	var pack = Buffer.alloc(header_len + data.length);
 	pack.writeUInt8(0, 0);
 	pack.writeUInt8(pt & 0x7F, 1);
 	pack.writeUInt16BE(sequencenumber, 2);
@@ -112,7 +112,7 @@ function set_callback(port, callback) {
 						}
 					} else {
 						if (xmp_pos == 8) {
-							pack = new Buffer(xmp_len - 8);
+							pack = Buffer.alloc(xmp_len - 8);
 						}
 						if (i + (xmp_len - xmp_pos) <= data_len) {
 							buff.copy(pack, xmp_pos - 8, i, i
