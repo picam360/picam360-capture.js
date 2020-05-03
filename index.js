@@ -1,4 +1,3 @@
-process.chdir(__dirname);
 var os = require('os');
 var fs = require("fs");
 var rtp = require("./rtp.js");
@@ -13,6 +12,20 @@ var PT_FILE = 102;
 var PT_CAM_BASE = 110;
 var PT_AUDIO_BASE = 120;
 
+function encodeHTML(str) {
+	return str.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
+function decodeHTML(str) {
+	return str.replace(/&apos;/g, "'")
+		.replace(/&quot;/g, '"')
+		.replace(/&gt;/g, '>')
+		.replace(/&lt;/g, '<')
+		.replace(/&amp;/g, '&');
+ }
 class Picam360Capture extends EventEmitter {
 	constructor() {
 		super();
@@ -55,19 +68,22 @@ class Picam360Capture extends EventEmitter {
 										var tag = str
 											.slice(last_spece + 1, first_dq - 1);
 										if (tag == "name") {
-											name = str
-												.slice(first_dq + 1, i);
+											name = decodeHTML(str
+												.slice(first_dq + 1, i));
 										} else if (tag == "value") {
-											value = str
-												.slice(first_dq + 1, i);
+											value = decodeHTML(str
+												.slice(first_dq + 1, i));
 										}
 										last_spece = -1;
 										first_dq = -1;
 									}
 								}
 							}
-							if (name && self.watches[name]) {
-								self.watches[name](value);
+							if (name) {
+								if(self.watches[name] && self.watches[name] != value){
+									self.emit(name + "_changed", value);
+								}
+								self.watches[name] = value;
 							}
 						}
 					}
@@ -76,11 +92,17 @@ class Picam360Capture extends EventEmitter {
 				}
 			});
 		// cmd to picam360-capture
+		{ // reset ack_command_id
+			var cmd = "<picam360:command id=\"0\" value=\"\" />";
+			var pack = rtcp
+				.build_packet(Buffer.from(cmd, 'ascii'), PT_CMD);
+			rtcp.sendpacket(pack, 9005, "127.0.0.1");
+		}
 		setInterval(function() {
 			if (self.cmd_list.length) {
 				var value = self.cmd_list.shift();
 				var cmd = "<picam360:command id=\"" + (++self.rtcp_command_id) +
-					"\" value=\"" + value + "\" />";
+					"\" value=\"" + encodeHTML(value) + "\" />";
 				var pack = rtcp
 					.build_packet(Buffer.from(cmd, 'ascii'), PT_CMD);
 				rtcp.sendpacket(pack, 9005, "127.0.0.1");
@@ -90,8 +112,8 @@ class Picam360Capture extends EventEmitter {
 	send_command(value) {
 		this.cmd_list.push(value);
 	}
-	add_watch(name, callback) {
-		this.watches[name] = callback;
+	get_status(name) {
+		return this.watches[name];
 	}
 }
 module.exports = Picam360Capture;
